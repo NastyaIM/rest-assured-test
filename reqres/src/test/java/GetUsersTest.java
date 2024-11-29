@@ -12,31 +12,64 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 
 public class GetUsersTest {
-    private static final String basePath = "https://reqres.in/api/";
+
     RequestSpecification requestSpec = new RequestSpecBuilder()
-            .setBaseUri(basePath)
+            .setBaseUri(EndPoints.basePath)
             .setContentType(ContentType.JSON)
             .build();
 
-    ResponseSpecification responseSpec = new ResponseSpecBuilder()
+    ResponseSpecification responseSpecOK = new ResponseSpecBuilder()
             .expectStatusCode(200)
             .build();
 
+    ResponseSpecification responseSpecNotFound = new ResponseSpecBuilder()
+            .expectStatusCode(404)
+            .build();
+
     @Test
-    public void checkGetUsersTest() {
+    public void getUsersAndCheckListIsValidTest() {
         List<User> users = given()
                 .spec(requestSpec)
                 .when()
-                .contentType(ContentType.JSON)
-                .get(EndPoints.getUsers)
+                .get(EndPoints.users + "?page=2")
                 .then()
-                .spec(responseSpec)
+                .spec(responseSpecOK)
                 .extract().body().jsonPath().getList("data", User.class);
 
         users.forEach(user -> Assert.assertTrue(user.getAvatar().contains(user.getId().toString())));
-        users.forEach(user -> Assert.assertTrue(user.getEmail().endsWith("reqres.in")));
+        users.forEach(user -> Assert.assertTrue(user.getEmail().endsWith("@reqres.in")));
         Assert.assertEquals(users.size(), 6);
-
-
     }
+
+    @Test
+    public void getSingleUserAndCheckIsValidTest() {
+        User expectedUser = User.builder()
+                .id(2)
+                .email("janet.weaver@reqres.in")
+                .firstName("Janet")
+                .lastName("Weaver")
+                .avatar("https://reqres.in/img/faces/2-image.jpg")
+                .build();
+        User actualUser = given()
+                .spec(requestSpec)
+                .when()
+                .get(EndPoints.users + "/2")
+                .then()
+                .spec(responseSpecOK)
+                .extract().body().jsonPath().getObject("data", User.class);
+
+        Assert.assertNotNull(actualUser);
+        Assert.assertEquals(expectedUser, actualUser);
+    }
+
+    @Test
+    public void getSingleUserNotFound() {
+        given()
+                .spec(requestSpec)
+                .when()
+                .get(EndPoints.users + "/23")
+                .then()
+                .spec(responseSpecNotFound);
+    }
+
 }

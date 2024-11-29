@@ -1,3 +1,4 @@
 public class EndPoints {
-    public static String getUsers = "users?page=2";
+    public static final String users = "users";
+    public static final String basePath = "https://reqres.in/api/";
 }
