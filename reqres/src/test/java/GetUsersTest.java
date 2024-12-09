@@ -1,9 +1,4 @@
 import data.User;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.builder.ResponseSpecBuilder;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
-import io.restassured.specification.ResponseSpecification;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,27 +8,15 @@ import static io.restassured.RestAssured.given;
 
 public class GetUsersTest {
 
-    RequestSpecification requestSpec = new RequestSpecBuilder()
-            .setBaseUri(EndPoints.basePath)
-            .setContentType(ContentType.JSON)
-            .build();
-
-    ResponseSpecification responseSpecOK = new ResponseSpecBuilder()
-            .expectStatusCode(200)
-            .build();
-
-    ResponseSpecification responseSpecNotFound = new ResponseSpecBuilder()
-            .expectStatusCode(404)
-            .build();
 
     @Test
     public void getUsersAndCheckListIsValidTest() {
         List<User> users = given()
-                .spec(requestSpec)
+                .spec(Specification.getRequestSpec())
                 .when()
                 .get(EndPoints.users + "?page=2")
                 .then()
-                .spec(responseSpecOK)
+                .spec(Specification.getResponseSpecOK())
                 .extract().body().jsonPath().getList("data", User.class);
 
         users.forEach(user -> Assert.assertTrue(user.getAvatar().contains(user.getId().toString())));
@@ -51,11 +34,11 @@ public class GetUsersTest {
                 .avatar("https://reqres.in/img/faces/2-image.jpg")
                 .build();
         User actualUser = given()
-                .spec(requestSpec)
+                .spec(Specification.getRequestSpec())
                 .when()
                 .get(EndPoints.users + "/2")
                 .then()
-                .spec(responseSpecOK)
+                .spec(Specification.getResponseSpecOK())
                 .extract().body().jsonPath().getObject("data", User.class);
 
         Assert.assertNotNull(actualUser);
@@ -65,11 +48,11 @@ public class GetUsersTest {
     @Test
     public void getSingleUserNotFound() {
         given()
-                .spec(requestSpec)
+                .spec(Specification.getRequestSpec())
                 .when()
                 .get(EndPoints.users + "/23")
                 .then()
-                .spec(responseSpecNotFound);
+                .spec(Specification.getResponseSpecNotFound());
     }
 
 }
